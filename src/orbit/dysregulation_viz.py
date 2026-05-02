@@ -675,7 +675,7 @@ def run_dysregulation_visualisations(
     os.makedirs(out_dir, exist_ok=True)
     P = len(pathway_names)
     print("\n" + "=" * 55)
-    print("  QuokkaVision v2 — Dysregulation figures  (Nature style)")
+    print("  ORBIT — Dysregulation figures")
     print("=" * 55)
 
     plot_delta_heatmap(
