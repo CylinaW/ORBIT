@@ -1,4 +1,4 @@
-# ORBIT — Synthetic identifiability benchmark (Section 3.2 / Appendix D)
+# ORBIT — Synthetic identifiability benchmark
 vocab: synthetic
 n_cells: 8000
 n_genes: 2000
