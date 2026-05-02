@@ -4,7 +4,7 @@ This repository contains the official implementation of ORBIT, accompanying the 
 
 ## Overview
 
-ORBIT is a self-supervised transformer that learns asymmetric, directed dependencies among gene programs from observational single-cell RNA-sequencing data alone. Stage 1 trains the pathway attention transformer with a masked-reconstruction objective augmented by an intervention-consistent influence loss, which forces attention weights to predict score-space shifts under single-program input ablation. Stage 2 fine-tunes a thin classification head (3.7% of Stage 1 parameters) on cell-type labels to enable condition-stratified analysis. The learned P × P attention matrix serves as the primary interpretability object for downstream analyses of gene program co-activation structure.
+ORBIT is a self-supervised transformer that learns asymmetric, directed dependencies among gene programs from observational single-cell RNA-sequencing data alone. Stage 1 trains the pathway attention transformer with a masked-reconstruction objective augmented by an intervention-consistent influence loss, which forces attention weights to predict score-space shifts under single-program input ablation. Stage 2 fine-tunes a thin classification head (3.9% of Stage 1 parameters) on cell-type labels to enable condition-stratified analysis. The learned P × P attention matrix serves as the primary interpretability object for downstream analyses of gene program co-activation structure.
 
 ## Installation
 
