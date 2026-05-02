@@ -49,7 +49,7 @@ The complete pipeline runs from a single entry point. Edit the `BASE` variable a
 python scripts/main.py
 ```
 
-This executes the full pipeline end-to-end: dataset loading, pathway-mask construction, Stage 1 self-supervised training, Stage 2 cell-type classification fine-tuning, evaluation, prediction on disease and control cohorts, mean attention computation, dysregulation analysis (AD vs. control), and figure generation. All hyperparameters are set in the `CONFIG` dictionary at the top of `main.py` and match the values in Appendix Tables 1–3 of the paper.
+This executes the full pipeline end-to-end: dataset loading, pathway-mask construction, Stage 1 self-supervised training, Stage 2 cell-type classification fine-tuning, evaluation, prediction on disease and control cohorts, mean attention computation, dysregulation analysis (AD vs. control), and visualization generation. All hyperparameters are set in the `CONFIG` dictionary at the top of `main.py` and match the values in Appendix Tables 1–3 of the paper.
 
 The synthetic identifiability benchmark (Section 3.2, Table 1 of the paper) is run separately:
 
@@ -75,11 +75,9 @@ src/orbit/
   dysregulation_viz.py        Rewiring figure generation
   synthetic.py                Synthetic generator and triplet evaluation
   visualisation.py            Attention heatmaps and gene-influence plots
-  figure_data.py              Figure-ready table assembly
 scripts/
   main.py                     End-to-end pipeline
 configs/                      YAML configurations per vocabulary
-tests/                        Unit and integration tests
 ```
 
 ## Hyperparameters
