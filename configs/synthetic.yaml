@@ -1,0 +1,40 @@
+# ORBIT — Synthetic identifiability benchmark (Section 3.2 / Appendix D)
+vocab: synthetic
+n_cells: 8000
+n_genes: 2000
+n_programs: 40
+n_additive_pairs: 12
+n_triplets: 4
+
+embed_dim: 128
+encoder_hidden: 96
+program_id_dim: 32
+n_heads: 8
+n_blocks: 2
+dropout_attn: 0.10
+dropout_encoder: 0.30
+dropout_ffn: 0.10
+ffn_expansion: 4
+
+stage1:
+  optimizer: adamw
+  beta1: 0.9
+  beta2: 0.999
+  weight_decay: 0.01
+  peak_lr: 1.0e-4
+  warmup_ratio: 0.10
+  schedule: cosine
+  grad_clip: 1.0
+  batch_size: 128
+  epochs: 50
+  mask_ratio: 0.40
+  n_interventions: 4
+  loss_weights:
+    recon: 1.00
+    entropy: 0.02
+    intervention: 0.05
+
+# Joint intervention probe (synthetic-only)
+joint_intervention: true
+
+seed: 42

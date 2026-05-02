@@ -1,0 +1,32 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+
+# Environments
+.venv/
+venv/
+.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Data and artefacts (do not commit)
+data/
+checkpoints/
+results/
+outputs/
+wandb/
+
+# File formats that shouldn't be in source
+*.h5ad
+*.pt
+*.pth
+*.npz
+*.gmt
+
+# OS
+.DS_Store
+Thumbs.db

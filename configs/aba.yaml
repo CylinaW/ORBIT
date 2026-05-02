@@ -1,0 +1,52 @@
+# ORBIT — Allen Brain Atlas vocabulary
+vocab: aba
+n_programs: 254
+min_pathway_genes: 5
+
+# Architecture (matches Appendix Table 3)
+embed_dim: 128
+encoder_hidden: 96
+program_id_dim: 32
+n_heads: 8
+n_blocks: 2
+dropout_attn: 0.10
+dropout_encoder: 0.30
+dropout_ffn: 0.10
+ffn_expansion: 4
+
+# Stage 1 (matches Appendix Table 1)
+stage1:
+  optimizer: adamw
+  beta1: 0.9
+  beta2: 0.999
+  weight_decay: 0.01
+  peak_lr: 1.0e-4
+  warmup_ratio: 0.10
+  schedule: cosine
+  grad_clip: 1.0
+  batch_size: 128
+  epochs: 50
+  mask_ratio: 0.40
+  n_interventions: 4
+  loss_weights:
+    recon: 1.00
+    entropy: 0.02
+    intervention: 0.05
+
+# Stage 2 (matches Appendix Table 2)
+stage2:
+  phase1_epochs: 50
+  phase1_patience: 5
+  phase2_epochs: 20
+  phase2_lr: 5.0e-5
+  schedule: cosine_warmup
+  class_weighting: inverse_frequency
+  oversample_classes: [Vasc]
+
+# Data
+n_classes: 7
+consolidate_vascular: true
+confidence_threshold: 0.7
+
+# Reproducibility
+seed: 42
