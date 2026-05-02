@@ -82,11 +82,11 @@ configs/                      YAML configurations per vocabulary
 
 ## Hyperparameters
 
-Stage 1 (Appendix Table 1): AdamW (β₁ = 0.9, β₂ = 0.999, weight decay 0.01), peak learning rate 1e-4 with cosine schedule and 10% linear warmup, gradient clipping at norm 1.0, batch size 128, 50 epochs, masking ratio 0.40, n_t = 4 intervention targets per step, loss weights 1.00 / 0.02 / 0.05 for the reconstruction, entropy, and intervention-consistent terms.
+Stage 1: AdamW (β₁ = 0.9, β₂ = 0.999, weight decay 0.01), peak learning rate 1e-4 with cosine schedule and 10% linear warmup, gradient clipping at norm 1.0, batch size 128, 50 epochs, masking ratio 0.40, n_t = 4 intervention targets per step, loss weights 1.00 / 0.02 / 0.05 for the reconstruction, entropy, and intervention-consistent terms.
 
-Stage 2 (Appendix Table 2): Phase 1 linear probe up to 50 epochs with early stopping (patience 5); Phase 2 end-to-end fine-tuning for 20 epochs at learning rate 5e-5 with cosine warmup; inverse-frequency class weighting; vascular cells (<1% of nuclei) oversampled and excluded from macro-F1.
+Stage 2: Phase 1 linear probe up to 50 epochs with early stopping (patience 5); Phase 2 end-to-end fine-tuning for 20 epochs at learning rate 5e-5 with cosine warmup; inverse-frequency class weighting; vascular cells (<1% of nuclei) oversampled and excluded from macro-F1.
 
-Architecture (Appendix Table 3): pathway encoder 96 → 128 with 32-dim learnable program-identity embedding; two pre-norm transformer blocks with 8-head self-attention and FFN expansion factor 4; dropout 0.30 (encoder) / 0.10 (attention and FFN). Stage 1 ≈ 415,104 parameters; classification head ≈ 16,000 parameters (3.9% of Stage 1).
+Architecture: pathway encoder 96 → 128 with 32-dim learnable program-identity embedding; two pre-norm transformer blocks with 8-head self-attention and FFN expansion factor 4; dropout 0.30 (encoder) / 0.10 (attention and FFN). Stage 1 ≈ 415,104 parameters; classification head ≈ 16,000 parameters (3.9% of Stage 1).
 
 ## Reproducibility
 
