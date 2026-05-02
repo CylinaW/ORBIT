@@ -1,26 +1,6 @@
 """
 QuokkaVision v2 — Dysregulation Visualisations  (v2.2)
 =======================================================
-Five publication-quality figures for the AD vs Control comparison.
-Nature Biotechnology style throughout.
-
-  Fig D1 — Signed delta heatmap  (disease - healthy pathway co-activation)
-  Fig D2 — Cell-type vulnerability bar + rewiring direction (fixed blank panel)
-  Fig D3 — Program dysregulation dot plot  (legend outside right margin)
-  Fig D4 — Gained vs lost co-activation network
-  Fig D5 — REPLACED: Pathway Co-activation Rewiring Scatter
-           (x = control attention, y = disease attention, per cell type)
-           This is genuinely different from DEG/GSEA — it plots PATHWAY-LEVEL
-           structural changes that are invisible to gene-level methods.
-
-Design decisions:
-  - Uniform Paul Tol palette across all figures (same _C_* constants)
-  - All legends placed outside axes with bbox_to_anchor to prevent overlap
-  - D2 rewiring panel: explicit xlim symmetry, guaranteed non-blank
-  - D5: not a volcano. The x/y axes are both attention weights (not fold-change
-    or p-value). The scatter reveals which program-pairs REWIRE in AD —
-    something DEG literally cannot show because DEG has no concept of
-    between-pathway coupling.
 """
 
 import numpy as np
