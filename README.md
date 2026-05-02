@@ -142,11 +142,10 @@ Every hyperparameter used in the paper is specified in `configs/{aba,kegg,reacto
 
 ## Reproducibility
 
-- **Seed.** The default random seed is 42. It controls dataset splitting, weight initialization, masking-mask sampling, and intervention-target sampling. Single-seed runs reproduce the point estimates reported in the paper.
-- **Validation discipline.** Hyperparameters were selected on a 10% validation split of the Morabito reference atlas and frozen before any evaluation on the held-out 20% test split. No test-set information was used during model or hyperparameter selection.
+- **Seed.** The default random seed is 42. It controls dataset splitting, weight initialization, masking-mask sampling, and intervention-target sampling.
+- **Validation discipline.** Hyperparameters were selected on a 10% validation split of the Morabito reference atlas and frozen before any evaluation on the held-out 20% test split.
 - **Significance protocol.** Rewiring results reported as primary findings (Section 3.5) survive three independent criteria simultaneously: (i) |Δ*Ā*| ≥ 0.004; (ii) permutation FDR *q* < 0.05 with 1,000 condition-label permutations and Benjamini–Hochberg correction per directed pair; (iii) Jaccard stability ≥ 0.70 of the top-*k* edge set across 10 random 80/20 subsamples.
-- **Cross-vocabulary replication.** Findings highlighted in the main text replicate across all three pathway vocabularies (ABA, KEGG, Reactome). Vocabulary-specific findings are flagged as such in the captions.
-- **Determinism.** PyTorch's CUDA kernels are not bitwise-deterministic across GPU architectures even with `torch.use_deterministic_algorithms(True)`; results within ± 0.001 macro-F1 are expected across A100 / H100 / RTX 6000 hardware. The CPU synthetic benchmark is fully deterministic.
+- **Cross-vocabulary replication.** Findings highlighted in the main text replicate across all three pathway vocabularies (ABA, KEGG, Reactome).
 
 ## License
 
