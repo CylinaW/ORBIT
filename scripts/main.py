@@ -56,7 +56,7 @@ CONFIG = {
     "embed_dim": 128, "num_heads": 8, "min_pathway_genes": 5,
 
     # ── Training ─────────────────────────────────────────────────────────
-    "epochs": 30, "batch_size": 512, "lr": 1e-3,
+    "epochs": 50, "batch_size": 128, "lr": 1e-3,
     "weight_decay": 0.01, "grad_clip": 1.0,
     "early_stop_patience": 7,
     "w_class": 1.0, "w_diversity": 0.1, "w_entropy": 0.01,
