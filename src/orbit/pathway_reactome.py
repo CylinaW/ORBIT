@@ -1,5 +1,5 @@
 """
-pathway_reactome.py  —  ORBIT Reactome Pathway Mask Builder
+ORBIT Reactome Pathway Mask Builder
 =====================================================================
 Builds the binary (G × P) pathway mask from Reactome gene sets.
 """
