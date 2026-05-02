@@ -18,7 +18,7 @@ and produces (i) a *P* × *P* attention matrix encoding the directed dependency 
 
 Stage 2 proceeds in two phases: a frozen-backbone linear probe (up to 50 epochs, early stopping on validation macro-F1, patience 5), followed by 20 epochs of end-to-end fine-tuning at a reduced learning rate. Rewiring analysis is purely post-hoc: per cell type *ct*, the signed delta Δ*Ā*<sub>*ct*</sub> = *Ā*<sup>AD</sup><sub>*ct*</sub> − *Ā*<sup>ctrl</sup><sub>*ct*</sub> identifies gained and lost co-activation, with significance assessed by 1,000-permutation FDR (Benjamini–Hochberg, per directed pair). Gene-level projection through the binary membership matrix *M* yields the gene-pathway influence map:
 
-$I_{g, p_2} = \sum_{p_1} M_{g, p_1} \cdot \bar{A}_{p_1, p_2}$.
+$$I_{g, p_2} = \sum_{p_1} M_{g, p_1} \cdot \bar{A}_{p_1, p_2}$$.
 
 ## Architecture
 
