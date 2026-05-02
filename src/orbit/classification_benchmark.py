@@ -4,20 +4,6 @@ classification_benchmark.py — Independent Cell-Type Classification
 Runs scANVI, CellTypist, and a logistic regression baseline independently
 of ORBIT to establish maximum achievable F1 on the same data split.
 
-This is separate from ORBIT's classification head so that ORBIT's number
-can be compared against independently optimized baselines, not ORBIT's
-own re-implementation of them.
-
-Usage in Colab
---------------
-    from classification_benchmark import run_independent_classification
-
-    results = run_independent_classification(
-        adata_ref,
-        val_fraction=0.20,
-        seed=42,
-        output_dir="benchmarks/classification/",
-    )
 """
 
 from __future__ import annotations
