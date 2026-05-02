@@ -1,21 +1,6 @@
 """
-QuokkaVision v2 — Visualisation Suite  (v2.2)
+ORBIT Core Visualizations
 ==============================================
-Nature Biotechnology publication-quality figures.
-
-Core figures (run_all_visualisations):
-  Fig 1 — Pathway co-activation heatmap
-  Fig 2 — Dataset integration + cell-type UMAP  (3-panel, wide)
-  Fig 3 — Pathway activation dot plot (legend outside)
-  Fig 4 — Gene influence: two-panel (AD genes | top-influence genes)
-  Fig 5 — Attention cascade network (genes→programs→attended programs)
-  Fig 6 — Attention entropy QC
-
-Science-upgrade figures (run_science_upgrades):
-  Fig S1 — Attention vs PPI overlap: prove attention encodes real biology
-  Fig S2 — Program decoupling in AD: find the non-obvious insight
-  Fig S3 — Per-cell-type attention matrix comparison
-
 Dysregulation figures: see dysregulation_viz.py
 """
 
