@@ -22,7 +22,7 @@ Stage 2 proceeds in two phases: a frozen-backbone linear probe (up to 50 epochs,
 
 ## Architecture
 
-The model has three components, totaling 415,104 parameters at Stage 1 (ABA vocabulary, *P* = 254):
+The model has three components, totaling 415,104 parameters at Stage 1 (ABA vocabulary, *P* = 220):
 
 - **Pathway encoder.** Each scalar score *s*<sub>*p*</sub> is projected to a 96-dimensional vector via a linear layer with weights shared across programs, followed by LayerNorm and GELU. A 32-dimensional learnable program-identity embedding is concatenated to give each program a unique identity, then the result is projected to *D* = 128 with LayerNorm, GELU, and dropout 0.30.
 - **Pathway attention transformer.** Two stacked pre-norm transformer blocks. Each block applies 8-head self-attention (attention dropout 0.10) followed by a feed-forward network of expansion factor 4 with GELU and dropout 0.10. The attention tensor of the **final** block is retained for the intervention-consistent loss and the reported attention matrix.
@@ -67,7 +67,7 @@ data/
     └── [GSE189819 per-donor .h5 files]
 ```
 
-Pathway vocabularies are constructed automatically: KEGG and Reactome are loaded from cached GMT files via `pathway_kegg.py` and `pathway_reactome.py`; the Allen Brain Atlas vocabulary is built from the reference atlas's curated cell-type marker lists. All three vocabularies are filtered to programs with at least 5 member genes intersecting the dataset, yielding *P* = 254 (ABA), 220 (KEGG), and 300 (Reactome).
+Pathway vocabularies are constructed automatically: KEGG and Reactome are loaded from cached GMT files via `pathway_kegg.py` and `pathway_reactome.py`; the Allen Brain Atlas vocabulary is built from the reference atlas's curated cell-type marker lists. All three vocabularies are filtered to programs with at least 5 member genes intersecting the dataset, yielding *P* = 220 (ABA), 318 (KEGG), and 170 (Reactome).
 
 ## Reproducing the experiments
 
