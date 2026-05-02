@@ -3,7 +3,7 @@ vocab: aba
 n_programs: 254
 min_pathway_genes: 5
 
-# Architecture (matches Appendix Table 3)
+# Architecture
 embed_dim: 128
 encoder_hidden: 96
 program_id_dim: 32
@@ -14,7 +14,7 @@ dropout_encoder: 0.30
 dropout_ffn: 0.10
 ffn_expansion: 4
 
-# Stage 1 (matches Appendix Table 1)
+# Stage 1
 stage1:
   optimizer: adamw
   beta1: 0.9
@@ -33,7 +33,7 @@ stage1:
     entropy: 0.02
     intervention: 0.05
 
-# Stage 2 (matches Appendix Table 2)
+# Stage 2
 stage2:
   phase1_epochs: 50
   phase1_patience: 5
