@@ -198,10 +198,10 @@ def plot_integration_umap(adata, save_path, n_neighbors=30, min_dist=0.3,
     sit in dedicated right-hand margin without overlapping data.
     Titles are positioned above each panel, not inside it.
     """
-    if "X_QuokkaVision" not in adata.obsm:
+    if "X_ORBIT" not in adata.obsm:
         raise ValueError("Run generate_embeddings() first.")
     if recompute or "X_umap" not in adata.obsm:
-        sc.pp.neighbors(adata, use_rep="X_QuokkaVision", n_neighbors=n_neighbors)
+        sc.pp.neighbors(adata, use_rep="X_ORBIT", n_neighbors=n_neighbors)
         sc.tl.umap(adata, min_dist=min_dist)
 
     umap = adata.obsm["X_umap"]
@@ -798,137 +798,8 @@ def plot_attention_entropy_qc(model, adata, save_path,
     plt.close(fig)
     print(f"  [Fig 6] {save_path}")
 
-
-# ===========================================================================
-# SCIENCE UPGRADE FIGURES
-# ===========================================================================
-
 # ---------------------------------------------------------------------------
-# Fig S1: Attention vs PPI overlap — prove attention encodes real biology
-# ---------------------------------------------------------------------------
-
-def plot_attention_vs_ppi(model, mean_attn, save_path,
-                           ppi_pairs: Optional[List[Tuple[str, str]]] = None,
-                           top_n_pairs: int = 200):
-    """
-    Scatter plot: x = attention weight between program pair,
-                  y = fraction of pathway member genes that share a PPI edge.
-
-    If ppi_pairs is None, uses a curated list of known AD-relevant
-    protein–protein interactions as ground truth.
-
-    Scientific claim: if QuokkaVision's attention encodes biology,
-    high-attention program pairs should have more PPI-connected gene members
-    than low-attention pairs. A positive correlation is publishable evidence.
-
-    ppi_pairs : list of (gene_A, gene_B) tuples from STRING or BioGRID.
-                If None, uses a minimal AD-relevant curated set.
-    """
-    # Minimal curated AD PPI set if none provided
-    if ppi_pairs is None:
-        ppi_pairs = [
-            ("APP", "PSEN1"), ("APP", "PSEN2"), ("APP", "APOE"),
-            ("MAPT", "CDK5"), ("MAPT", "GSK3B"), ("MAPT", "FKBP5"),
-            ("APOE", "TREM2"), ("APOE", "CLU"), ("APOE", "BIN1"),
-            ("TREM2", "DAP12"), ("TREM2", "TYROBP"),
-            ("SNCA", "PARK7"), ("SNCA", "HSPA8"),
-            ("BDNF", "NTRK2"), ("NTRK2", "MAPK1"),
-            ("PSEN1", "NOTCH1"), ("PSEN2", "NOTCH1"),
-            ("GSK3B", "AKT1"), ("GSK3B", "CTNNB1"),
-            ("CDK5", "P35"), ("CDK5", "CDKN5"),
-            ("CLU", "APOJ"), ("BIN1", "DNM1L"),
-            ("SNAP25", "SYP"), ("SYP", "VAMP2"),
-        ]
-
-    ppi_set = {frozenset(p) for p in ppi_pairs}
-
-    mask   = model.pathway_mask.cpu().numpy()   # (G, P)
-    P      = mask.shape[1]
-    names  = model.pathway_names
-
-    # For each program pair, compute PPI-connection fraction
-    pair_records = []
-    flat_attn    = []
-    flat_ppi     = []
-
-    for p1 in range(P):
-        for p2 in range(p1 + 1, P):
-            genes_p1 = set(np.where(mask[:, p1] > 0)[0])
-            genes_p2 = set(np.where(mask[:, p2] > 0)[0])
-            if len(genes_p1) == 0 or len(genes_p2) == 0:
-                continue
-            # Fraction of cross-program gene pairs that share a PPI
-            cross = [(g1, g2) for g1 in genes_p1 for g2 in genes_p2]
-            if len(cross) == 0:
-                continue
-            # We don't have gene names here, skip actual PPI lookup for now
-            # Use attention weight as proxy and report correlation structure
-            attn_sym = (mean_attn[p1, p2] + mean_attn[p2, p1]) / 2.0
-            flat_attn.append(attn_sym)
-            # Placeholder: will be filled with real PPI fraction if gene names available
-            flat_ppi.append(np.random.beta(2, 10) if attn_sym > np.median(mean_attn) else
-                            np.random.beta(1, 15))
-
-    flat_attn = np.array(flat_attn)
-    flat_ppi  = np.array(flat_ppi)
-
-    # Sort by attention and take representative sample
-    sort_idx = np.argsort(flat_attn)
-    n_bins   = 20
-    bin_edges = np.percentile(flat_attn, np.linspace(0, 100, n_bins + 1))
-    bin_attn, bin_ppi, bin_ci = [], [], []
-    for lo, hi in zip(bin_edges[:-1], bin_edges[1:]):
-        mask_b = (flat_attn >= lo) & (flat_attn < hi)
-        if mask_b.sum() < 2:
-            continue
-        bin_attn.append(flat_attn[mask_b].mean())
-        bin_ppi.append(flat_ppi[mask_b].mean())
-        bin_ci.append(_95ci(flat_ppi[mask_b]))
-
-    bin_attn = np.array(bin_attn)
-    bin_ppi  = np.array(bin_ppi)
-    bin_ci   = np.array(bin_ci)
-
-    r, p_val = scipy.stats.pearsonr(flat_attn, flat_ppi)
-
-    fig, ax = plt.subplots(figsize=(5.0, 4.0))
-    ax.scatter(flat_attn, flat_ppi, s=2.5, c=_C_BLUE,
-               alpha=0.15, rasterized=True, linewidths=0)
-    ax.errorbar(bin_attn, bin_ppi, yerr=bin_ci,
-                fmt="o", color=_C_RED, ms=4, lw=1.2,
-                capsize=2.5, capthick=0.9, zorder=4,
-                label=f"Binned mean ± 95% CI")
-
-    # Trend line
-    z = np.polyfit(flat_attn, flat_ppi, 1)
-    xfit = np.linspace(flat_attn.min(), flat_attn.max(), 100)
-    ax.plot(xfit, np.polyval(z, xfit), color=_C_GRN, lw=1.5,
-            ls="--", label=f"Trend  r = {r:.2f},  p = {p_val:.3f}")
-
-    ax.set_xlabel("Mean attention weight (program pair)", labelpad=3)
-    ax.set_ylabel("PPI-connected gene fraction", labelpad=3)
-    ax.set_title("Attention weights correlate with\nknown protein–protein interactions",
-                 fontsize=9, fontweight="bold", pad=5)
-    ax.legend(fontsize=7, frameon=False, loc="upper left",
-              handlelength=1.4, labelspacing=0.35)
-    ax.yaxis.grid(True, lw=0.4, alpha=0.4, color="#CCCCCC")
-    ax.set_axisbelow(True)
-    _clean_ax(ax)
-    _panel_label(ax, "a")
-
-    fig.text(0.01, -0.03,
-             "Each point = one program pair. High attention → more PPI-connected members "
-             "→ attention encodes real biology.",
-             fontsize=6, color="#666666")
-
-    plt.tight_layout()
-    plt.savefig(save_path, dpi=300, bbox_inches="tight")
-    plt.close(fig)
-    print(f"  [Fig S1] {save_path}")
-
-
-# ---------------------------------------------------------------------------
-# Fig S2: Program decoupling in AD — the non-obvious insight
+# Fig S1: Program decoupling in AD — the non-obvious insight
 # ---------------------------------------------------------------------------
 
 def plot_ad_decoupling(mean_attn_disease, mean_attn_control,
@@ -1029,11 +900,11 @@ def plot_ad_decoupling(mean_attn_disease, mean_attn_control,
     plt.tight_layout()
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"  [Fig S2] {save_path}")
+    print(f"  [Fig S1] {save_path}")
 
 
 # ---------------------------------------------------------------------------
-# Fig S3: Per-cell-type attention matrix comparison
+# Fig S2: Per-cell-type attention matrix comparison
 # ---------------------------------------------------------------------------
 
 def plot_celltype_attention_comparison(
@@ -1054,7 +925,7 @@ def plot_celltype_attention_comparison(
     cell_types = list(attn_by_celltype.keys())
     n_ct       = len(cell_types)
     if n_ct == 0:
-        print("  [Fig S3] No cell-type attention data. Skipping.")
+        print("  [Fig S2] No cell-type attention data. Skipping.")
         return
 
     # Pick top programs by max variance across all cell types
@@ -1114,7 +985,7 @@ def plot_celltype_attention_comparison(
 
     plt.savefig(save_path, dpi=300, bbox_inches="tight")
     plt.close(fig)
-    print(f"  [Fig S3] {save_path}")
+    print(f"  [Fig S2] {save_path}")
 
 
 # ===========================================================================
@@ -1165,8 +1036,7 @@ def run_all_visualisations(model, adata, mean_attn, out_dir,
 
 def run_science_upgrades(model, mean_attn_all, pathway_names, out_dir,
                           mean_attn_disease=None, mean_attn_control=None,
-                          attn_by_celltype=None,
-                          ppi_pairs=None):
+                          attn_by_celltype=None):
     """
     Run the three science-upgrade figures.
 
@@ -1176,30 +1046,24 @@ def run_science_upgrades(model, mean_attn_all, pathway_names, out_dir,
     mean_attn_disease   : (P, P) mean attention over disease cells only
     mean_attn_control   : (P, P) mean attention over control cells only
     attn_by_celltype    : dict {cell_type: (P, P) mean attention}
-    ppi_pairs           : list of (geneA, geneB) from STRING/BioGRID
     """
     os.makedirs(out_dir, exist_ok=True)
     print("\n" + "=" * 55)
-    print("  QuokkaVision v2 — Science upgrade figures")
+    print("  ORBIT figures")
     print("=" * 55)
-
-    plot_attention_vs_ppi(
-        model, mean_attn_all,
-        os.path.join(out_dir, "figS1_attention_vs_ppi.pdf"),
-        ppi_pairs=ppi_pairs)
 
     if mean_attn_disease is not None and mean_attn_control is not None:
         plot_ad_decoupling(
             mean_attn_disease, mean_attn_control, pathway_names,
-            os.path.join(out_dir, "figS2_ad_decoupling.pdf"))
+            os.path.join(out_dir, "figS1_ad_decoupling.pdf"))
     else:
-        print("  [Fig S2] Skipped: provide mean_attn_disease and mean_attn_control")
+        print("  [Fig S1] Skipped: provide mean_attn_disease and mean_attn_control")
 
     if attn_by_celltype is not None:
         plot_celltype_attention_comparison(
             attn_by_celltype, pathway_names,
-            os.path.join(out_dir, "figS3_celltype_attention.pdf"))
+            os.path.join(out_dir, "figS2_celltype_attention.pdf"))
     else:
-        print("  [Fig S3] Skipped: provide attn_by_celltype dict")
+        print("  [Fig S2] Skipped: provide attn_by_celltype dict")
 
     print(f"\n  Saved to: {out_dir}")
