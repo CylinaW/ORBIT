@@ -8,9 +8,7 @@ ORBIT is a self-supervised transformer that learns asymmetric, directed dependen
 
 Given a nucleus's library-size-normalized, log1p-transformed expression vector and a curated vocabulary of *P* gene programs, ORBIT computes a per-program scalar activation score
 
-```
 $$s_{i,p} = \frac{1}{\sqrt{|\pi_p|}} \sum_{g \in \pi_p} g_{i,g}$$
-```
 
 and produces (i) a *P* × *P* attention matrix encoding the directed dependency from each program to every other program and (ii) a cell-type label. The Stage 1 objective combines three terms with the loss weights given in Appendix A:
 
