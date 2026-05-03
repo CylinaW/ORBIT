@@ -1,22 +1,19 @@
 """
 ORBIT — Benchmarking
 =====================================
-Implements all five benchmarks:
-
   B1  — Classification vs scANVI and CellTypist (Level 1)
-  B2a — AUCell correlation / ranked-AUC pathway score validation (Level 2a)
-  B3b — Shuffled-label negative control (Level 3b)
-  B3c — Cross-dataset replication of top-50 attention pairs (Level 3c)
-  B4c — Permutation FDR for dysregulation (Level 4c / run_permutation=True)
+  B2 — AUCell correlation / ranked-AUC pathway score validation (Level 2a)
+  B3 — Shuffled-label negative control (Level 3b)
+  B4 — Permutation FDR for dysregulation (Level 4c / run_permutation=True)
 
-Design notes
+Notes
 ------------
-AUCell (B2a) is reproduced in pure Python using a ranked AUC calculation
+AUCell (B2) is reproduced in pure Python using a ranked AUC calculation
 (Aibar et al., Nature Methods 2017) — mathematically equivalent to the R AUCell::AUCell_run().
 The ranked AUC for gene set S is the area under the recovery curve of S genes
 ranked by expression in each cell, normalised by the maximum possible AUC.
 
-Permutation testing (B4c) re-uses the existing dysregulation.permutation_test_delta()
+Permutation testing (B4) re-uses the existing dysregulation.permutation_test_delta()
 function — we just set run_permutation=True and collect the output.
 
 scANVI (B1) requires scvi-tools ≥ 1.1; CellTypist requires celltypist ≥ 1.5.
@@ -284,7 +281,7 @@ def _print_comparison_table(df: pd.DataFrame, cell_types: list):
 
 
 # ---------------------------------------------------------------------------
-# B2a — AUCell-equivalent pathway score correlation
+# b2 — AUCell-equivalent pathway score correlation
 # ---------------------------------------------------------------------------
 
 def ranked_auc_score(X_dense: np.ndarray, gene_set_mask: np.ndarray,
@@ -351,7 +348,7 @@ def benchmark_aucell_correlation(
 
     os.makedirs(output_dir, exist_ok=True)
     print(f"\n{'='*60}")
-    print(f"B2a — AUCell Correlation Benchmark")
+    print(f"b2 — AUCell Correlation Benchmark")
     print(f"  n_sample={n_sample}  auc_threshold={auc_threshold:.0%}")
     print(f"{'='*60}")
 
@@ -396,7 +393,7 @@ def benchmark_aucell_correlation(
             low_r_count += 1
 
     df = pd.DataFrame(rows).sort_values("pearson_r", ascending=False)
-    path = os.path.join(output_dir, "B2a_aucell_correlation.csv")
+    path = os.path.join(output_dir, "b2_aucell_correlation.csv")
     df.to_csv(path, index=False)
 
     n_valid = len(df)
@@ -411,12 +408,12 @@ def benchmark_aucell_correlation(
     print(f"\n  Bottom 5 by r:")
     for _, row in df.tail(5).iterrows():
         print(f"    {row['program'][:55]:<55}  r={row['pearson_r']:.3f}")
-    print(f"\nB2a results saved: {path}")
+    print(f"\nb2 results saved: {path}")
     return df
 
 
 # ---------------------------------------------------------------------------
-# B3b — Shuffled-label negative control
+# b3 — Shuffled-label negative control
 # ---------------------------------------------------------------------------
 
 def benchmark_shuffled_label_control(
@@ -436,7 +433,7 @@ def benchmark_shuffled_label_control(
 
     os.makedirs(output_dir, exist_ok=True)
     print(f"\n{'='*60}")
-    print(f"B3b — Shuffled-Label Negative Control")
+    print(f"b3 — Shuffled-Label Negative Control")
     print(f"{'='*60}")
 
     if device is None:
@@ -533,9 +530,9 @@ def benchmark_shuffled_label_control(
         "num_classes":     num_classes,
         "n_cells":         n,
     }
-    path = os.path.join(output_dir, "B3b_shuffled_control.csv")
+    path = os.path.join(output_dir, "b3_shuffled_control.csv")
     pd.DataFrame([results]).to_csv(path, index=False)
-    print(f"\nB3b results saved: {path}")
+    print(f"\nb3 results saved: {path}")
 
     # Interpretation
     print(f"\n  INTERPRETATION:")
@@ -562,7 +559,7 @@ def benchmark_shuffled_label_control(
 
 
 # ---------------------------------------------------------------------------
-# B3b (full) — Retrain-from-scratch shuffled-label control
+# b3 (full) — Retrain-from-scratch shuffled-label control
 # ---------------------------------------------------------------------------
 
 def benchmark_shuffled_label_retrain(
@@ -579,7 +576,7 @@ def benchmark_shuffled_label_retrain(
 
     os.makedirs(output_dir, exist_ok=True)
     print(f"\n{'='*60}")
-    print(f"B3b (full) — Retrain-from-scratch Shuffled-Label Control")
+    print(f"b3 (full) — Retrain-from-scratch Shuffled-Label Control")
     print(f"  n_pretrain={n_pretrain_epochs}  n_finetune={n_finetune_epochs}")
     print(f"  NOTE: a high r (>0.7) is EXPECTED and supports the claim that")
     print(f"  co-activation structure reflects biological gene expression, not")
@@ -662,159 +659,13 @@ def benchmark_shuffled_label_retrain(
         "n_finetune": n_finetune_epochs,
         "interpretation": "label-independent" if r > 0.7 else "mixed" if r > 0.3 else "label-dependent",
     }
-    path = os.path.join(output_dir, "B3b_shuffled_retrain.csv")
+    path = os.path.join(output_dir, "b3_shuffled_retrain.csv")
     pd.DataFrame([results]).to_csv(path, index=False)
-    print(f"\nB3b (full) results saved: {path}")
+    print(f"\nb3 (full) results saved: {path}")
     return results
 
-
-
 # ---------------------------------------------------------------------------
-# B3c — Cross-dataset replication of top-50 attention pairs
-# ---------------------------------------------------------------------------
-
-def benchmark_cross_dataset_replication(
-    model,
-    adata,
-    output_dir: str,
-    dataset_a_label: str = "reference",
-    dataset_b_label: str = "disease",
-    top_k: int = 50,
-    n_max_per_ds: int = 20000,
-    seed: int = 42,
-) -> dict:
-    """
-    Benchmark 3c: Cross-dataset replication of top-K attention pairs.
-
-    Computes mean attention on two subsets of `adata` (split by obs['dataset']),
-    extracts the top-K (P1, P2) pairs by attention weight in dataset A,
-    and measures what fraction of those pairs are ALSO in the top-K of dataset B.
-
-    Replication rate = |top-K(A) ∩ top-K(B)| / K
-    Expected: ≥ 70% for biologically real co-activation patterns.
-
-    Also reports Pearson r between the full (P×P) attention matrices (off-diagonal).
-
-    Parameters
-    ----------
-    dataset_a_label : obs['dataset'] value for training/reference set
-    dataset_b_label : obs['dataset'] value for replication set (disease or control)
-    top_k           : number of top pairs to compare
-    """
-    from scipy.stats import pearsonr, spearmanr
-
-    os.makedirs(output_dir, exist_ok=True)
-    print(f"\n{'='*60}")
-    print(f"B3c — Cross-Dataset Replication (top-{top_k} attention pairs)")
-    print(f"  Dataset A (train):  obs['dataset'] == '{dataset_a_label}'")
-    print(f"  Dataset B (replicate): obs['dataset'] == '{dataset_b_label}'")
-    print(f"{'='*60}")
-
-    def _subset_attn(label, n_max):
-        sub = adata[adata.obs["dataset"] == label]
-        if sub.n_obs == 0:
-            raise ValueError(f"No cells found with dataset='{label}'")
-        rng = np.random.default_rng(seed)
-        idx = rng.choice(sub.n_obs, min(n_max, sub.n_obs), replace=False)
-        sub = sub[idx]
-        X   = _to_dense(sub.X).astype(np.float32)
-        Xt  = torch.tensor(X, dtype=torch.float32)
-        print(f"  Computing attention for '{label}' ({len(idx):,} cells)...")
-        attn = model.compute_mean_attention(Xt, batch_size=256)
-        return attn, len(idx)
-
-    attn_a, n_a = _subset_attn(dataset_a_label, n_max_per_ds)
-    attn_b, n_b = _subset_attn(dataset_b_label, n_max_per_ds)
-    P = attn_a.shape[0]
-
-    # Zero diagonal, flatten
-    diag   = np.eye(P, dtype=bool)
-    a_flat = attn_a.copy(); a_flat[diag] = 0
-    b_flat = attn_b.copy(); b_flat[diag] = 0
-
-    # Top-K pairs in each dataset
-    def _top_k_pairs(mat, k):
-        idx_flat = np.argsort(mat.ravel())[::-1][:k]
-        rows = idx_flat // P
-        cols = idx_flat % P
-        return set(zip(rows.tolist(), cols.tolist()))
-
-    top_a = _top_k_pairs(a_flat, top_k)
-    top_b = _top_k_pairs(b_flat, top_k)
-    overlap = top_a & top_b
-    rep_rate = len(overlap) / top_k
-
-    # Full-matrix correlations
-    a_vec   = a_flat[~diag]
-    b_vec   = b_flat[~diag]
-    pearson_r, pearson_p = pearsonr(a_vec, b_vec)
-    spearman_r, spearman_p = spearmanr(a_vec, b_vec)
-
-    # Top-50 pair details
-    pathway_names = model.pathway_names
-    top_pairs_both = sorted(overlap)
-    pair_rows = []
-    for r, c in top_pairs_both:
-        pair_rows.append({
-            "P1":       pathway_names[r],
-            "P2":       pathway_names[c],
-            "attn_A":   float(attn_a[r, c]),
-            "attn_B":   float(attn_b[r, c]),
-            "in_both":  True,
-        })
-    # Add pairs only in A
-    for r, c in (top_a - overlap):
-        pair_rows.append({
-            "P1":       pathway_names[r],
-            "P2":       pathway_names[c],
-            "attn_A":   float(attn_a[r, c]),
-            "attn_B":   float(attn_b[r, c]),
-            "in_both":  False,
-        })
-    df_pairs = pd.DataFrame(pair_rows).sort_values("in_both", ascending=False)
-
-    print(f"\n  Top-{top_k} pair replication rate: {rep_rate:.1%}  "
-          f"({len(overlap)}/{top_k} pairs replicated)")
-    print(f"  Full-matrix Pearson r:  {pearson_r:.4f}  (p={pearson_p:.2e})")
-    print(f"  Full-matrix Spearman r: {spearman_r:.4f}  (p={spearman_p:.2e})")
-
-    if rep_rate >= 0.70:
-        print(f"  PASS  Replication rate ≥ 70%: attention patterns are robust "
-              f"across datasets.")
-    elif rep_rate >= 0.50:
-        print(f"  MARGINAL  Replication rate {rep_rate:.1%}: partial replication. "
-              f"Report with confidence intervals from bootstrap.")
-    else:
-        print(f"  LOW  Replication rate {rep_rate:.1%} < 50%. Check dataset "
-              f"compatibility (batch effects, tissue differences).")
-
-    print(f"\n  Top replicated pairs (both datasets):")
-    for _, row in df_pairs[df_pairs["in_both"]].head(10).iterrows():
-        print(f"    {row['P1'][:35]:<35}  ->  {row['P2'][:35]:<35}"
-              f"  A={row['attn_A']:.4f}  B={row['attn_B']:.4f}")
-
-    results = {
-        "dataset_a":         dataset_a_label,
-        "dataset_b":         dataset_b_label,
-        "n_a":               n_a,
-        "n_b":               n_b,
-        "top_k":             top_k,
-        "n_replicated":      len(overlap),
-        "replication_rate":  rep_rate,
-        "pearson_r":         float(pearson_r),
-        "spearman_r":        float(spearman_r),
-    }
-
-    path_summary = os.path.join(output_dir, "B3c_replication_summary.csv")
-    path_pairs   = os.path.join(output_dir, "B3c_top_pairs.csv")
-    pd.DataFrame([results]).to_csv(path_summary, index=False)
-    df_pairs.to_csv(path_pairs, index=False)
-    print(f"\nB3c results saved: {path_summary}, {path_pairs}")
-    return results
-
-
-# ---------------------------------------------------------------------------
-# B4c — Permutation FDR for dysregulation
+# b4 — Permutation FDR for dysregulation
 # ---------------------------------------------------------------------------
 
 def benchmark_permutation_fdr(
@@ -845,7 +696,7 @@ def benchmark_permutation_fdr(
 
     os.makedirs(output_dir, exist_ok=True)
     print(f"\n{'='*60}")
-    print(f"B4c — Permutation FDR for Dysregulation")
+    print(f"b4 — Permutation FDR for Dysregulation")
     print(f"  n_permutations={n_permutations}  FDR alpha={fdr_alpha}")
     print(f"{'='*60}")
 
@@ -911,7 +762,7 @@ def benchmark_permutation_fdr(
               f"of top-20: {n_top20_sig}/20")
         # Save per-cell-type results
         safe_ct = ct.replace(" ", "_").replace("/", "-")
-        path_ct = os.path.join(output_dir, f"B4c_perm_fdr_{safe_ct}.csv")
+        path_ct = os.path.join(output_dir, f"b4_perm_fdr_{safe_ct}.csv")
         df_ct.head(200).to_csv(path_ct, index=False)
         summary_rows.append({
             "cell_type":       ct,
@@ -938,11 +789,11 @@ def benchmark_permutation_fdr(
               f"q={row['qval']:.4f}{star}")
 
     summary_df = pd.DataFrame(summary_rows)
-    path_summary = os.path.join(output_dir, "B4c_permutation_summary.csv")
-    path_top     = os.path.join(output_dir, "B4c_top_pairs_all_celltypes.csv")
+    path_summary = os.path.join(output_dir, "b4_permutation_summary.csv")
+    path_top     = os.path.join(output_dir, "b4_top_pairs_all_celltypes.csv")
     summary_df.to_csv(path_summary, index=False)
     top_global.to_csv(path_top, index=False)
-    print(f"\nB4c results saved: {path_summary}")
+    print(f"\nb4 results saved: {path_summary}")
     return {"summary": summary_df, "top_pairs": top_global, "per_ct": perm_stats}
 
 
@@ -980,17 +831,17 @@ def run_all_benchmarks(
 
     if run_aucell:
         try:
-            results["B2a"] = benchmark_aucell_correlation(
+            results["b2"] = benchmark_aucell_correlation(
                 model, adata_ref, output_dir)
         except Exception as e:
-            print(f"B2a failed: {e}")
+            print(f"b2 failed: {e}")
 
     if run_shuffled:
         try:
-            results["B3b"] = benchmark_shuffled_label_control(
+            results["b3"] = benchmark_shuffled_label_control(
                 model, adata_ref, output_dir, device=device)
         except Exception as e:
-            print(f"B3b failed: {e}")
+            print(f"b3 failed: {e}")
 
     if run_cross_dataset:
         try:
@@ -1012,7 +863,7 @@ def run_all_benchmarks(
 
     if run_permutation_fdr:
         try:
-            results["B4c"] = benchmark_permutation_fdr(
+            results["b4"] = benchmark_permutation_fdr(
                 model, adata, output_dir,
                 condition_col=condition_col,
                 healthy_label=healthy_label,
@@ -1021,7 +872,7 @@ def run_all_benchmarks(
                 device=device,
             )
         except Exception as e:
-            print(f"B4c failed: {e}")
+            print(f"b4 failed: {e}")
 
     print(f"\n{'='*60}")
     print(f"All benchmarks complete. Results in: {output_dir}")
@@ -1182,7 +1033,7 @@ def run_ablation_suite(
       (c) Random initialization (Stage 1 not pretrained) → Stage 2 only
 
     For each ablation, measures:
-      - AUCell correlation (B2a metric)
+      - AUCell correlation (b2 metric)
       - Classification macro-F1 on held-out 20%
 
     Returns a DataFrame comparing all ablations vs full ORBIT.
